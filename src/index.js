@@ -1,4 +1,5 @@
 const FORMULAIC_API_URL = "https://formulaic.app";
+const FORMULA_CACHE_TTL = 600000; // 10 minutes in milliseconds
 
 class HttpClient {
   async get(url, headers) {
@@ -41,6 +42,7 @@ class Formulaic {
     };
     this.httpClient = new HttpClient(); // Use HttpClient by default
     this.debug = options.debug || false; // Default to false if not provided
+    this.formulaCache = {}; // Initialize the formula cache
   }
 
   /**
@@ -76,7 +78,7 @@ class Formulaic {
   }
 
   /**
-   * Retrieves information about a specific formula.
+   * Retrieves information about a specific formula, using a local cache.
    *
    * @param {string} formulaId - The ID of the formula to retrieve.
    * @returns {Promise<object>} - A Promise that resolves with the formula data as returned by the API.
@@ -86,6 +88,18 @@ class Formulaic {
       if (!formulaId) {
         throw new Error("Formula ID is required");
       }
+
+      // Check the cache
+      if (
+        this.formulaCache[formulaId] &&
+        Date.now() - this.formulaCache[formulaId].timestamp < FORMULA_CACHE_TTL
+      ) {
+        if (this.debug) {
+          console.log("Formulaic: Returning formula from cache:", formulaId);
+        }
+        return this.formulaCache[formulaId].data;
+      }
+
       const url = `${this.apiUrl}/api/recipes/${formulaId}/scripts`;
 
       if (this.debug) {
@@ -105,7 +119,20 @@ class Formulaic {
           `Failed to get formula: ${response.status} - ${response.statusText}`
         );
       }
-      return await response.json();
+
+      const formulaData = await response.json();
+
+      // Update the cache
+      this.formulaCache[formulaId] = {
+        timestamp: Date.now(),
+        data: formulaData,
+      };
+
+      if (this.debug) {
+        console.log("Formulaic: Updating formula cache:", formulaId);
+      }
+
+      return formulaData;
     } catch (error) {
       throw error;
     }
