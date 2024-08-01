@@ -1,0 +1,26 @@
+{
+  "name": "formulaic-node",
+  "version": "0.1.0",
+  "description": "The official Node package for Formulaic.",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mozilla-Ocho/formulaic-node.git"
+  },
+  "keywords": [
+    "llm",
+    "ai",
+    "genai",
+    "mozilla",
+    "formulaic"
+  ],
+  "author": "Gabriel",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/Mozilla-Ocho/formulaic-node/issues"
+  },
+  "homepage": "https://github.com/Mozilla-Ocho/formulaic-node#readme"
+}
