@@ -33,7 +33,8 @@ describe("Formulaic", () => {
 
   beforeEach(() => {
     mockHttpClient = new MockHttpClient();
-    formulaic = new Formulaic(TEST_API_KEY, TEST_FORMULAIC_API_URL, {
+    formulaic = new Formulaic(TEST_API_KEY, {
+      baseURL: TEST_FORMULAIC_API_URL,
       httpClient: mockHttpClient,
     });
   });
@@ -41,13 +42,15 @@ describe("Formulaic", () => {
   describe("constructor", () => {
     it("should initialize with API key and default API URL", () => {
       expect(formulaic.apiKey).toBe(TEST_API_KEY);
-      expect(formulaic.apiUrl).toBe(TEST_FORMULAIC_API_URL);
+      expect(formulaic.baseURL).toBe(TEST_FORMULAIC_API_URL);
     });
 
     it("should allow overriding the API URL", () => {
       const customApiUrl = "https://custom-formulaic.com";
-      const customFormulaic = new Formulaic(TEST_API_KEY, customApiUrl);
-      expect(customFormulaic.apiUrl).toBe(customApiUrl);
+      const customFormulaic = new Formulaic(TEST_API_KEY, {
+        baseURL: customApiUrl,
+      });
+      expect(customFormulaic.baseURL).toBe(customApiUrl);
     });
 
     it("should set up default headers", () => {
@@ -57,7 +60,7 @@ describe("Formulaic", () => {
     });
 
     it("should set up debug mode if specified", () => {
-      const debugFormulaic = new Formulaic(TEST_API_KEY, undefined, {
+      const debugFormulaic = new Formulaic(TEST_API_KEY, {
         debug: true,
       });
       expect(debugFormulaic.debug).toBe(true);

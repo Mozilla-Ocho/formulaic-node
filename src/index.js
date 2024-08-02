@@ -1,4 +1,4 @@
-const FORMULAIC_API_URL = "https://formulaic.app";
+const FORMULAIC_BASE_URL = "https://formulaic.app";
 const FORMULA_CACHE_TTL = 600000; // 10 minutes in milliseconds
 
 class HttpClient {
@@ -28,14 +28,14 @@ class Formulaic {
    * Creates a new Formulaic instance.
    *
    * @param {string} apiKey - The API key for your Formulaic account.
-   * @param {string} apiUrl - The base URL for the Formulaic API.
    * @param {object} [options] - Optional configuration options.
+   * @param {string} [options.baseURL="https://formulaic.app"] - The base URL for the Formulaic API.
    * @param {boolean} [options.debug=false] - Enable debug logging.
    * @param {HttpClient} [options.httpClient=new HttpClient()] - The HTTP client to use.
    */
-  constructor(apiKey, apiUrl, options = {}) {
+  constructor(apiKey, options = {}) {
     this.apiKey = apiKey;
-    this.apiUrl = apiUrl || FORMULAIC_API_URL;
+    this.baseURL = options.baseURL || FORMULAIC_BASE_URL;
     this.headers = {
       Authorization: "Bearer " + this.apiKey,
       Accept: "*/*",
@@ -45,7 +45,6 @@ class Formulaic {
     this.debug = options.debug || false; // Default to false if not provided
     this.formulaCache = {}; // Initialize the formula cache
   }
-
   /**
    * Retrieves a list of available models.
    *

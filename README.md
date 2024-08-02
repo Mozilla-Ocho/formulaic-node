@@ -1,6 +1,11 @@
 # Formulaic API Client
 
-This is a Node/JavaScript library for interacting with the Formulaic API. It provides a simple way to send requests like inference (i.e. promping a large language model), getting prompts from a formula and more to make using generative AI a breeze in your project.
+This is a Node/JavaScript library for interacting with the Formulaic API. It provides a simple way to send requests like inference (i.e. prompting a large language model), getting prompts from a formula and more to make using generative AI a breeze in your project.
+
+## Getting Started
+
+1. **Create a Formulaic Account:** Sign up for a free Formulaic account at [https://formulaic.app](https://formulaic.app).
+2. **Generate an API Key:** Go to your profile page at [https://formulaic.app/profile#api-key](https://formulaic.app/profile#api-key) and create a new API key. You'll need this key to authenticate with the Formulaic API.
 
 ## Installation
 
@@ -19,12 +24,13 @@ yarn add formulaic-node
 ## Usage
 
 ```javascript
-const { Formulaic } = require("@your-username/formulaic-api-client");
+const { Formulaic } = require("formulaic-node"); // Corrected require statement
+const FORMULAIC_API_URL = "https://formulaic.app"; // API URL as a variable
 
 // Create a new Formulaic instance
-const formulaic = new Formulaic("YOUR_API_KEY", "https://formulaic.app", {
-  debug: true, // Enable debug logging
-  cache_ttl: 600000, // Cache time-to-live (TTL) in milliseconds (default: 10 minutes)
+const formulaic = new Formulaic("YOUR_API_KEY", {
+  baseURL: FORMULAIC_API_URL, // Use a different API URL
+  debug: true,
 });
 
 // Get a list of available models
@@ -33,7 +39,8 @@ formulaic.getModels().then((models) => {
 });
 
 // Get information about a specific formula
-formulaic.getFormula("f7df2832-c1bd-4e72-b2fe-22bc68abcc26").then((formula) => {
+const formulaId = "f7df2832-c1bd-4e72-b2fe-22bc68abcc26"; // Replace with your formula ID
+formulaic.getFormula(formulaId).then((formula) => {
   console.log(formula);
 });
 
@@ -54,7 +61,7 @@ const completionData = {
   ],
 };
 formulaic
-  .createCompletion("f7df2832-c1bd-4e72-b2fe-22bc68abcc26", completionData)
+  .createCompletion(formulaId, completionData) // Replace with your formula ID
   .then((completion) => {
     console.log(completion);
   });
@@ -67,16 +74,16 @@ formulaic
 #### Constructor
 
 ```javascript
-new Formulaic(apiKey, apiUrl, [options]);
+new Formulaic(apiKey, [options]);
 ```
 
-| Parameter           | Type      | Description                                                                               |
-| ------------------- | --------- | ----------------------------------------------------------------------------------------- |
-| `apiKey`            | `string`  | The API key for your Formulaic account.                                                   |
-| `apiUrl`            | `string`  | The base URL for the Formulaic API. Defaults to `https://formulaic.app`.                  |
-| `options`           | `object`  | Optional configuration options.                                                           |
-| `options.debug`     | `boolean` | Enable debug logging. Defaults to `false`.                                                |
-| `options.cache_ttl` | `number`  | Cache time-to-live (TTL) in milliseconds for formulas. Defaults to `600000` (10 minutes). |
+| Parameter           | Type      | Description                                            | Default                 |
+| ------------------- | --------- | ------------------------------------------------------ | ----------------------- |
+| `apiKey`            | `string`  | The API key for your Formulaic account.                |                         |
+| `options`           | `object`  | Optional configuration options.                        |                         |
+| `options.baseURL`   | `string`  | The base URL for the Formulaic API.                    | `https://formulaic.app` |
+| `options.debug`     | `boolean` | Enable debug logging.                                  | `false`                 |
+| `options.cache_ttl` | `number`  | Cache time-to-live (TTL) in milliseconds for formulas. | `600000` (10 minutes)   |
 
 #### Methods
 
