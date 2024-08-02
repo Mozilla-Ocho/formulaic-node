@@ -31,6 +31,7 @@ class Formulaic {
    * @param {string} apiUrl - The base URL for the Formulaic API.
    * @param {object} [options] - Optional configuration options.
    * @param {boolean} [options.debug=false] - Enable debug logging.
+   * @param {HttpClient} [options.httpClient=new HttpClient()] - The HTTP client to use.
    */
   constructor(apiKey, apiUrl, options = {}) {
     this.apiKey = apiKey;
@@ -40,7 +41,7 @@ class Formulaic {
       Accept: "*/*",
       "Content-Type": "application/json",
     };
-    this.httpClient = new HttpClient(); // Use HttpClient by default
+    this.httpClient = options.httpClient || new HttpClient(); // Use provided client or default
     this.debug = options.debug || false; // Default to false if not provided
     this.formulaCache = {}; // Initialize the formula cache
   }
