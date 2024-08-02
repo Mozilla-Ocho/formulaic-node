@@ -52,7 +52,7 @@ class Formulaic {
    */
   async getModels() {
     try {
-      const url = `${this.apiUrl}/api/models`;
+      const url = `${this.baseURL}/api/models`;
 
       if (this.debug) {
         console.log("Formulaic: Sending request to:", url);
@@ -100,7 +100,7 @@ class Formulaic {
         return this.formulaCache[formulaId].data;
       }
 
-      const url = `${this.apiUrl}/api/recipes/${formulaId}/scripts`;
+      const url = `${this.baseURL}/api/recipes/${formulaId}/scripts`;
 
       if (this.debug) {
         console.log("Formulaic: Sending request to:", url);
@@ -166,7 +166,7 @@ class Formulaic {
       const scriptId = formula.id;
 
       const formulaUrl = `/api/recipes/${formulaId}/scripts/${scriptId}/artifacts`; // Construct the URL for sending a completion request
-      const url = this.apiUrl + formulaUrl;
+      const url = this.baseURL + formulaUrl;
 
       if (this.debug) {
         console.log("Formulaic: Sending request to:", url);
