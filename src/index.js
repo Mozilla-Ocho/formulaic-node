@@ -29,6 +29,22 @@ class HttpClient {
 }
 
 class Formulaic {
+  /**
+   * Create a new Formulaic instance.
+   * @param {string} apiKey - The API key for the Formulaic API.
+   * @param {object} [options] - Additional options for the Formulaic instance.
+   * @param {string} [options.baseURL] - The base URL for the Formulaic API.
+   * @param {object} [options.httpClient] - An HTTP client to use for requests.
+   * @param {boolean} [options.debug] - Whether to log debug messages.
+   * @returns {Formulaic} A new Formulaic instance.
+   * @throws {Error} If the API key is not provided.
+   * @throws {Error} If the API key is not a string.
+   * @throws {Error} If the API key is an empty string.
+   * @throws {Error} If the base URL is not a string.
+   * @throws {Error} If the HTTP client is not an object.
+   * @throws {Error} If the debug option is not a boolean.
+   *
+   **/
   constructor(apiKey, options = {}) {
     this.apiKey = apiKey;
     this.baseURL = options.baseURL || FORMULAIC_BASE_URL;
