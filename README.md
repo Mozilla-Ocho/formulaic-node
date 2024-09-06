@@ -1,6 +1,6 @@
 # Formulaic API Client
 
-This is a Node/JavaScript library for interacting with the Formulaic API. It provides a simple way to send requests like inference (i.e., prompting a large language model), retrieving prompts from a formula, and more to make using generative AI easy in your project.
+This is a Node/JavaScript library for interacting with the Formulaic API. It provides a simple way to send requests like inference (i.e., prompting a large language model), retrieving prompts from a formula, and instant RAG (upload files that enhance LLM results) to make using generative AI easy in your project.
 
 ## Getting Started
 
