@@ -2,190 +2,121 @@ const FORMULAIC_BASE_URL = "https://formulaic.app";
 const FORMULA_CACHE_TTL = 600000; // 10 minutes in milliseconds
 
 class HttpClient {
-  async get(url, headers) {
-    const response = await fetch(url, {
-      method: "GET",
+  async request(url, method = "GET", data = null, headers = {}) {
+    const options = {
+      method,
       headers,
-    });
-    return response;
+      body: data ? JSON.stringify(data) : undefined,
+    };
+    const response = await fetch(url, options);
+
+    if (!response.ok) {
+      throw new Error(
+        `HTTP error! Status: ${response.status} - ${response.statusText}`
+      );
+    }
+
+    return response.json(); // Assuming the response is always JSON
   }
 
-  async post(url, data, headers) {
-    const response = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(data),
-    });
-    return response;
+  get(url, headers) {
+    return this.request(url, "GET", null, headers);
+  }
+
+  post(url, data, headers) {
+    return this.request(url, "POST", data, headers);
   }
 }
 
-/**
- * A class for interacting with the Formulaic API.
- */
 class Formulaic {
-  /**
-   * Creates a new Formulaic instance.
-   *
-   * @param {string} apiKey - The API key for your Formulaic account.
-   * @param {object} [options] - Optional configuration options.
-   * @param {string} [options.baseURL="https://formulaic.app"] - The base URL for the Formulaic API.
-   * @param {boolean} [options.debug=false] - Enable debug logging.
-   * @param {HttpClient} [options.httpClient=new HttpClient()] - The HTTP client to use.
-   */
   constructor(apiKey, options = {}) {
     this.apiKey = apiKey;
     this.baseURL = options.baseURL || FORMULAIC_BASE_URL;
     this.headers = {
-      Authorization: "Bearer " + this.apiKey,
-      Accept: "*/*",
+      Authorization: `Bearer ${this.apiKey}`,
+      Accept: "application/json", // Changed to application/json for more specific Accept header
       "Content-Type": "application/json",
     };
-    this.httpClient = options.httpClient || new HttpClient(); // Use provided client or default
-    this.debug = options.debug || false; // Default to false if not provided
-    this.formulaCache = {}; // Initialize the formula cache
+    this.httpClient = options.httpClient || new HttpClient();
+    this.debug = options.debug || false;
+    this.formulaCache = {};
   }
-  /**
-   * Retrieves a list of available models.
-   *
-   * @returns {Promise<object[]>} - A Promise that resolves with an array of model objects as returned by the API.
-   */
-  async getModels() {
-    try {
-      const url = `${this.baseURL}/api/models`;
 
-      if (this.debug) {
-        console.log("Formulaic: Sending request to:", url);
-        console.log("Formulaic: Headers:", this.headers);
-      }
-
-      const response = await this.httpClient.get(url, this.headers);
-
-      if (this.debug) {
-        console.log("Formulaic: Response status:", response.status);
-        console.log("Formulaic: Response text:", response.statusText);
-      }
-
-      if (response.status !== 200) {
-        throw new Error(
-          `Failed to get models: ${response.status} - ${response.statusText}`
-        );
-      }
-      return await response.json();
-    } catch (error) {
-      throw error;
+  logDebug(...messages) {
+    if (this.debug) {
+      console.log("Formulaic:", ...messages);
     }
   }
 
-  /**
-   * Retrieves information about a specific formula, using a local cache.
-   *
-   * @param {string} formulaId - The ID of the formula to retrieve.
-   * @returns {Promise<object>} - A Promise that resolves with the formula data as returned by the API.
-   */
-  async getFormula(formulaId) {
+  async getModels() {
+    const url = `${this.baseURL}/api/models`;
+
+    this.logDebug("Sending request to:", url);
+
     try {
-      if (!formulaId) {
-        throw new Error("Formula ID is required");
-      }
+      const models = await this.httpClient.get(url, this.headers);
+      this.logDebug("Received models:", models);
+      return models;
+    } catch (error) {
+      throw new Error(`Failed to get models: ${error.message}`);
+    }
+  }
 
-      // Check the cache
-      if (
-        this.formulaCache[formulaId] &&
-        Date.now() - this.formulaCache[formulaId].timestamp < FORMULA_CACHE_TTL
-      ) {
-        if (this.debug) {
-          console.log("Formulaic: Returning formula from cache:", formulaId);
-        }
-        return this.formulaCache[formulaId].data;
-      }
+  async getFormula(formulaId) {
+    if (!formulaId) {
+      throw new Error("Formula ID is required");
+    }
 
-      const url = `${this.baseURL}/api/recipes/${formulaId}/scripts`;
+    // Check the cache
+    const cachedFormula = this.formulaCache[formulaId];
+    if (
+      cachedFormula &&
+      Date.now() - cachedFormula.timestamp < FORMULA_CACHE_TTL
+    ) {
+      this.logDebug("Returning formula from cache:", formulaId);
+      return cachedFormula.data;
+    }
 
-      if (this.debug) {
-        console.log("Formulaic: Sending request to:", url);
-        console.log("Formulaic: Headers:", this.headers);
-      }
+    const url = `${this.baseURL}/api/recipes/${formulaId}/scripts`;
 
-      const response = await this.httpClient.get(url, this.headers);
+    this.logDebug("Sending request to:", url);
 
-      if (this.debug) {
-        console.log("Formulaic: Response status:", response.status);
-        console.log("Formulaic: Response text:", response.statusText);
-      }
-
-      if (response.status !== 200) {
-        throw new Error(
-          `Failed to get formula: ${response.status} - ${response.statusText}`
-        );
-      }
-
-      const formulaData = await response.json();
-
-      // Update the cache
+    try {
+      const formulaData = await this.httpClient.get(url, this.headers);
       this.formulaCache[formulaId] = {
         timestamp: Date.now(),
         data: formulaData,
       };
-
-      if (this.debug) {
-        console.log("Formulaic: Updating formula cache:", formulaId);
-      }
-
+      this.logDebug("Updating formula cache:", formulaId);
       return formulaData;
     } catch (error) {
-      throw error;
+      throw new Error(`Failed to get formula: ${error.message}`);
     }
   }
 
-  /**
-   * Sends a completion request to the Formulaic API.
-   *
-   * @param {string} formulaId - The ID of the formula to use for the completion.
-   * @param {object} data - The data to send to the API.
-   * @param {string[]} data.models - An array of model IDs to use for the completion.
-   * @returns {Promise<object>} - A Promise that resolves with the completion response as returned by the API.
-   */
   async createCompletion(formulaId, data) {
-    // Validate data
-    if (!data.models || typeof data.models !== "object") {
-      throw new Error("Data must include a 'models' array.");
-    }
-    if (data.models.length === 0) {
+    if (!Array.isArray(data.models) || data.models.length === 0) {
       throw new Error(
-        "Data must include at least one model in the 'models' array."
+        "Data must include a 'models' array with at least one model."
       );
     }
 
-    try {
-      if (this.debug) {
-        console.log("Formulaic: Sending request with data:", data);
-      }
+    this.logDebug("Sending request with data:", data);
 
+    try {
       const formula = await this.getFormula(formulaId);
       const scriptId = formula.id;
+      const url = `${this.baseURL}/api/recipes/${formulaId}/scripts/${scriptId}/artifacts`;
 
-      const formulaUrl = `/api/recipes/${formulaId}/scripts/${scriptId}/artifacts`; // Construct the URL for sending a completion request
-      const url = this.baseURL + formulaUrl;
+      this.logDebug("Sending request to:", url);
 
-      if (this.debug) {
-        console.log("Formulaic: Sending request to:", url);
-        console.log("Formulaic: Headers:", this.headers);
-      }
-
-      const response = await this.httpClient.post(url, data, this.headers);
-
-      if (this.debug) {
-        console.log("Formulaic: Response status:", response.status);
-        console.log("Formulaic: Response text:", response.statusText);
-      }
-
-      if (response.status !== 200) {
-        throw new Error(
-          `Failed to get response from LLM: ${response.status} - ${response.statusText}`
-        );
-      }
-      return await response.json();
+      const completionResponse = await this.httpClient.post(
+        url,
+        data,
+        this.headers
+      );
+      this.logDebug("Received completion response:", completionResponse);
+      return completionResponse;
     } catch (error) {
       throw new Error(`Failed to create completion: ${error.message}`);
     }
