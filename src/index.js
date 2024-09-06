@@ -94,14 +94,26 @@ class Formulaic {
     }
   }
 
-  async createCompletion(formulaId, data) {
-    if (!Array.isArray(data.models) || data.models.length === 0) {
+  async createCompletion(formulaId, data = {}) {
+    // Ensure `models` and `variables` are arrays, defaulting to empty arrays if not provided
+    const models = Array.isArray(data.models) ? data.models : [];
+    const variables = Array.isArray(data.variables) ? data.variables : [];
+
+    // Throw an error only if models array is explicitly provided but is empty
+    if (data.models && models.length === 0) {
       throw new Error(
-        "Data must include a 'models' array with at least one model."
+        "Data must include at least one model in the 'models' array."
       );
     }
 
-    this.logDebug("Sending request with data:", data);
+    // Similar check for variables if needed
+    if (data.variables && variables.length === 0) {
+      throw new Error(
+        "Data must include at least one variable in the 'variables' array."
+      );
+    }
+
+    this.logDebug("Sending request with data:", { ...data, models, variables });
 
     try {
       const formula = await this.getFormula(formulaId);
@@ -112,7 +124,7 @@ class Formulaic {
 
       const completionResponse = await this.httpClient.post(
         url,
-        data,
+        { ...data, models, variables },
         this.headers
       );
       this.logDebug("Received completion response:", completionResponse);
