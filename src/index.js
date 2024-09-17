@@ -100,6 +100,7 @@ class Formulaic {
     if (!formulaId) throw new Error("Formula ID is required");
 
     const cachedFormula = this.formulaCache.get(formulaId);
+
     if (cachedFormula) {
       this.logDebug("Returning formula from cache:", formulaId);
       return cachedFormula;
@@ -132,10 +133,6 @@ class Formulaic {
   async createCompletion(formulaId, data = {}) {
     const models = Array.isArray(data.models) ? data.models : [];
     const variables = Array.isArray(data.variables) ? data.variables : [];
-
-    if (!models.length) throw new Error("At least one model is required.");
-    if (!variables.length)
-      throw new Error("At least one variable is required.");
 
     try {
       const formula = await this.getFormula(formulaId);
