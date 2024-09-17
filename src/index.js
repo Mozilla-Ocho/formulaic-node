@@ -164,8 +164,7 @@ class Formulaic {
     this.logDebug("Uploading file to:", url, "with file name:", fileName);
 
     try {
-      const headers = formData.getHeaders(); // Get headers for form-data
-      const response = await this.httpClient.post(url, formData, headers);
+      const response = await this.httpClient.post(url, formData);
       this.logDebug("File upload response:", response);
       return response;
     } catch (error) {
