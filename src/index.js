@@ -118,6 +118,16 @@ class Formulaic {
     }
   }
 
+  async getScripts(formulaId) {
+    const url = `${this.baseURL}/api/recipes/${formulaId}/scripts`;
+    this.logDebug("Fetching scripts for formula:", formulaId);
+    try {
+      return await this.httpClient.get(url);
+    } catch (error) {
+      throw new Error(`Failed to get scripts: ${error.message}`);
+    }
+  }
+
   async createFormula(data) {
     const url = `${this.baseURL}/api/recipes`;
 
@@ -135,8 +145,8 @@ class Formulaic {
     const variables = Array.isArray(data.variables) ? data.variables : [];
 
     try {
-      const formula = await this.getFormula(formulaId);
-      const url = `${this.baseURL}/api/recipes/${formulaId}/scripts/${formula.id}/artifacts`;
+      const script = await this.getScripts(formulaId);
+      const url = `${this.baseURL}/api/recipes/${formulaId}/scripts/${script.id}/artifacts`;
       this.logDebug("Creating completion for formula:", formulaId);
 
       return await this.httpClient.post(url, { ...data, models, variables });
