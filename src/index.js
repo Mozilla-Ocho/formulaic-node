@@ -241,14 +241,10 @@ class Formulaic {
 
     const url = `${this.baseURL}/api/recipes/${formulaId}/chats`;
 
-    const body = JSON.stringify({
-      messages,
-    });
-
     this.logDebug("Creating chat completion for formula:", formulaId);
 
     try {
-      const response = await this.httpClient.post(url, body, {
+      const response = await this.httpClient.post(url, messages, {
         "Content-Type": "application/json",
       });
 
