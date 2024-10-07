@@ -210,7 +210,7 @@ describe("Formulaic", () => {
 
       expect(mockHttpClient.post).toHaveBeenCalledWith(
         `${formulaic.baseURL}/api/recipes/${TEST_FORMULA_ID}/chats`,
-        TEST_MESSAGES,
+        { messages: TEST_MESSAGES },
         { "Content-Type": "application/json" }
       );
 
