@@ -5,6 +5,10 @@ describe("Formulaic", () => {
   const TEST_FORMULA_ID = "test-formula-id";
   const TEST_MODEL_ID = "test-model-id";
   const TEST_VARIABLES = [{ key: "var1", value: "value1" }];
+  const TEST_MESSAGES = [
+    { role: "assistant", content: "Welcome to Formulaic! Ask me anything." },
+    { role: "user", content: "hello" },
+  ];
   let mockHttpClient;
   let formulaic;
 
@@ -13,7 +17,6 @@ describe("Formulaic", () => {
       get: jest.fn(),
       post: jest.fn(),
       headers: {
-        // Add this line to mock headers
         Authorization: `Bearer ${TEST_API_KEY}`,
         Accept: "application/json",
         "Content-Type": "application/json",
@@ -60,18 +63,14 @@ describe("Formulaic", () => {
     it("should make a GET request to the models endpoint", async () => {
       const expectedModels = [{ id: "model1", name: "Model 1" }];
 
-      // Mock the resolved value for the GET request
       mockHttpClient.get.mockResolvedValue(expectedModels);
 
-      // Call the actual method
       const models = await formulaic.getModels();
 
-      // Ensure that the mock was called with the correct URL and headers
       expect(mockHttpClient.get).toHaveBeenCalledWith(
         `${formulaic.baseURL}/api/models`
       );
 
-      // Check that the returned models match the mock result
       expect(models).toEqual(expectedModels);
     });
 
@@ -91,7 +90,6 @@ describe("Formulaic", () => {
 
       const retrievedData = await formulaic.getFormula(TEST_FORMULA_ID);
 
-      // Update the test to expect the correct URL without "/scripts"
       expect(mockHttpClient.get).toHaveBeenCalledWith(
         `${formulaic.baseURL}/api/recipes/${TEST_FORMULA_ID}`
       );
@@ -103,16 +101,12 @@ describe("Formulaic", () => {
     it("should return cached data if available and within TTL", async () => {
       const cachedData = { id: TEST_FORMULA_ID };
 
-      // Use the cache's set method to cache the data
       formulaic.formulaCache.set(TEST_FORMULA_ID, cachedData);
 
-      // Retrieve the formula, which should come from the cache
       const retrievedData = await formulaic.getFormula(TEST_FORMULA_ID);
 
-      // Ensure that the HTTP GET request was not called because we used the cached data
       expect(mockHttpClient.get).not.toHaveBeenCalled();
 
-      // Verify that the retrieved data matches the cached data
       expect(retrievedData).toEqual(cachedData);
     });
 
@@ -136,18 +130,10 @@ describe("Formulaic", () => {
     const formulaData = { id: "test-script-id", name: "Test Formula" };
 
     beforeEach(() => {
-      // Ensure that getFormula returns a valid formula object
       mockHttpClient.get.mockResolvedValue(formulaData);
     });
 
     it("should make a POST request to the completion endpoint", async () => {
-      const completionResponse = { result: "Completed!" };
-      const formulaData = { id: "test-script-id", name: "Test Formula" };
-
-      // Mock the get request to return a valid formula
-      mockHttpClient.get.mockResolvedValue(formulaData);
-
-      // Mock the post request to return a completion response
       mockHttpClient.post.mockResolvedValue(completionResponse);
 
       const result = await formulaic.createCompletion(TEST_FORMULA_ID, {
@@ -155,46 +141,102 @@ describe("Formulaic", () => {
         variables: TEST_VARIABLES,
       });
 
-      // Ensure the post request was called with the correct URL, body, and headers
       expect(mockHttpClient.post).toHaveBeenCalledWith(
         `${formulaic.baseURL}/api/recipes/${TEST_FORMULA_ID}/scripts/${formulaData.id}/artifacts`,
         { models: [TEST_MODEL_ID], variables: TEST_VARIABLES }
       );
 
-      // Check that the result matches the mocked completion response
       expect(result).toEqual(completionResponse);
     });
 
     it("should proceed with empty models and variables arrays if they are not provided", async () => {
-      const completionResponse = { result: "Completed!" };
-
-      // Mock the post request to return a successful response
       mockHttpClient.post.mockResolvedValue(completionResponse);
 
-      // Call the method without providing models or variables
       const result = await formulaic.createCompletion(TEST_FORMULA_ID, {});
 
-      // Ensure that the post request was called with empty models and variables
       expect(mockHttpClient.post).toHaveBeenCalledWith(
         `${formulaic.baseURL}/api/recipes/${TEST_FORMULA_ID}/scripts/${formulaData.id}/artifacts`,
         { models: [], variables: [] }
       );
 
-      // Ensure the result matches the mocked response
       expect(result).toEqual(completionResponse);
     });
 
     it("should throw an error if the request fails", async () => {
-      // Mock the failure of the post request
       mockHttpClient.post.mockRejectedValue(new Error("Request failed"));
 
-      // Provide both models and variables to avoid the validation error
       await expect(
         formulaic.createCompletion(TEST_FORMULA_ID, {
           models: [TEST_MODEL_ID],
           variables: TEST_VARIABLES,
         })
       ).rejects.toThrowError("Failed to create completion: Request failed");
+    });
+  });
+
+  // New test for createChatCompletion
+  describe("createChatCompletion", () => {
+    const chatCompletionResponse = {
+      chat: {
+        context: "",
+        messages: [
+          {
+            role: "assistant",
+            content: "Welcome to Formulaic! Ask me anything.",
+          },
+          { role: "user", content: "hello" },
+          {
+            role: "assistant",
+            content:
+              "Hello! It seems like you want to provide some context. Please go ahead and share it, and I'll do my best to assist you!",
+            context: [],
+          },
+        ],
+      },
+      usage: {
+        prompt_tokens: 29,
+        completion_tokens: 28,
+        total_tokens: 57,
+      },
+    };
+
+    it("should make a POST request to the chat completion endpoint", async () => {
+      mockHttpClient.post.mockResolvedValue(chatCompletionResponse);
+
+      const result = await formulaic.createChatCompletion(
+        TEST_FORMULA_ID,
+        TEST_MESSAGES
+      );
+
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        `${formulaic.baseURL}/api/recipes/${TEST_FORMULA_ID}/chats`,
+        JSON.stringify({ messages: TEST_MESSAGES }),
+        { "Content-Type": "application/json" }
+      );
+
+      expect(result).toEqual(chatCompletionResponse);
+    });
+
+    it("should throw an error if the request fails", async () => {
+      mockHttpClient.post.mockRejectedValue(new Error("Request failed"));
+
+      await expect(
+        formulaic.createChatCompletion(TEST_FORMULA_ID, TEST_MESSAGES)
+      ).rejects.toThrowError(
+        "Failed to create chat completion: Request failed"
+      );
+    });
+
+    it("should throw an error if the formula ID is not provided", async () => {
+      await expect(
+        formulaic.createChatCompletion(null, TEST_MESSAGES)
+      ).rejects.toThrowError("Formula ID is required");
+    });
+
+    it("should throw an error if messages are not provided as an array", async () => {
+      await expect(
+        formulaic.createChatCompletion(TEST_FORMULA_ID, "invalid-messages")
+      ).rejects.toThrowError("Messages must be an array");
     });
   });
 });
