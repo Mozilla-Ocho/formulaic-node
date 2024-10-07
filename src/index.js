@@ -244,9 +244,13 @@ class Formulaic {
     this.logDebug("Creating chat completion for formula:", formulaId);
 
     try {
-      const response = await this.httpClient.post(url, messages, {
-        "Content-Type": "application/json",
-      });
+      const response = await this.httpClient.post(
+        url,
+        { messages },
+        {
+          "Content-Type": "application/json",
+        }
+      );
 
       this.logDebug("Chat completion response:", response);
       return response;
