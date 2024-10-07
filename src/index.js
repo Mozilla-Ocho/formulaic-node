@@ -2,6 +2,7 @@ const FORMULAIC_BASE_URL = "https://formulaic.app";
 const FORMULA_CACHE_TTL = 600000; // 10 minutes in milliseconds
 const fs = require("fs");
 const { Blob } = require("buffer");
+
 class HttpClient {
   constructor(apiKey) {
     this.apiKey = apiKey;
@@ -160,11 +161,9 @@ class Formulaic {
     const formData = new FormData();
 
     if (Buffer.isBuffer(file)) {
-      // Convert Buffer to Blob for native FormData compatibility
       const blob = new Blob([file]);
       formData.append("file", blob, fileName);
     } else if (typeof file === "string") {
-      // If it's a file path (Node.js), read it from the filesystem as a stream
       const fileStream = fs.createReadStream(file);
       formData.append("file", fileStream, fileName);
     } else {
@@ -232,6 +231,31 @@ class Formulaic {
       return response;
     } catch (error) {
       throw new Error(`Failed to delete file: ${error.message}`);
+    }
+  }
+
+  // Method to create chat completion
+  async createChatCompletion(formulaId, messages) {
+    if (!formulaId) throw new Error("Formula ID is required");
+    if (!Array.isArray(messages)) throw new Error("Messages must be an array");
+
+    const url = `${this.baseURL}/api/recipes/${formulaId}/chats`;
+
+    const body = JSON.stringify({
+      messages,
+    });
+
+    this.logDebug("Creating chat completion for formula:", formulaId);
+
+    try {
+      const response = await this.httpClient.post(url, body, {
+        "Content-Type": "application/json",
+      });
+
+      this.logDebug("Chat completion response:", response);
+      return response;
+    } catch (error) {
+      throw new Error(`Failed to create chat completion: ${error.message}`);
     }
   }
 }
