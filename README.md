@@ -193,7 +193,3 @@ try {
   console.error("Error fetching models:", error.message);
 }
 ```
-
----
-
-This version of the README improves clarity and offers better examples and descriptions for each method, with accurate type information and up-to-date API details.
