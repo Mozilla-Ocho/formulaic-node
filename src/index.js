@@ -9,6 +9,7 @@ class HttpClient {
     this.headers = {
       Authorization: `Bearer ${this.apiKey}`,
       Accept: "application/json",
+      "Content-Type": "application/json",
     };
   }
 
@@ -18,7 +19,6 @@ class HttpClient {
       headers: { ...this.headers, ...customHeaders },
       body: data && !(data instanceof FormData) ? JSON.stringify(data) : data,
     };
-
     const response = await fetch(url, options);
 
     if (!response.ok) {
@@ -39,6 +39,7 @@ class HttpClient {
   }
 
   patch(url, data, headers = {}) {
+    console.log("data", data.script.sequences);
     return this.request(url, "PATCH", data, headers);
   }
 
@@ -129,13 +130,51 @@ class Formulaic {
     }
   }
 
+  /*
+   * Create a new formula
+   * @param {Object} data - The formula data
+   * @param {Object[]} data.prompts - The prompts for the formula
+   * @param {Object[]} data.models - The models for the formula
+   * @param {Object[]} data.variables - The variables for the formula
+   * @returns {Promise<Object>} The created formula
+   * @throws {Error} If the request fails
+   */
   async createFormula(data) {
     const url = `${this.baseURL}/api/recipes`;
 
     this.logDebug("Creating new formula:", url);
-
+    const { prompts, model, variables, ...formulaData } = data;
     try {
-      return await this.httpClient.post(url, data);
+      const newFormula = await this.httpClient.post(url, formulaData);
+      this.logDebug("New formula created:", newFormula);
+      const newScript = await this.getScripts(newFormula.id);
+
+      if (!newScript) {
+        throw new Error("Failed to create script for formula");
+      }
+
+      const allModels = await this.getModels();
+      const modelObj = allModels.find((m) => m.id === model);
+
+      const updatedScriptData = {
+        ...newScript,
+        script: {
+          model: modelObj ? modelObj : newScript.script.model,
+          variables: variables ?? newScript.script.variables,
+          sequences: prompts ? [prompts] : newScript.script.sequences,
+        },
+      };
+
+      const scriptUrl = `${this.baseURL}/api/recipes/${newFormula.id}/scripts`;
+      const savedScript = await this.httpClient.patch(
+        scriptUrl,
+        updatedScriptData
+      );
+      this.logDebug("Script updated:", savedScript);
+      return {
+        ...newFormula,
+        script: savedScript,
+      };
     } catch (error) {
       throw new Error(`Failed to create formula: ${error.message}`);
     }
