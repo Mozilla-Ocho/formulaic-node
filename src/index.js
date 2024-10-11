@@ -113,8 +113,9 @@ class Formulaic {
 
     try {
       const formulaData = await this.httpClient.get(url);
-      this.formulaCache.set(formulaId, formulaData);
-      return formulaData;
+      const scriptData = await this.getScripts(formulaId);
+      this.formulaCache.set(formulaId, { ...formulaData, ...scriptData });
+      return { ...formulaData, ...scriptData };
     } catch (error) {
       throw new Error(`Failed to get formula: ${error.message}`);
     }
