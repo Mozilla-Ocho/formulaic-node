@@ -1,6 +1,6 @@
 {
   "name": "formulaic-node",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "description": "The official Node package for Formulaic.",
   "main": "src/index.js",
   "types": "src/index.d.ts",
