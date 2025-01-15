@@ -3,6 +3,7 @@
   "version": "0.2.10",
   "description": "The official Node package for Formulaic.",
   "main": "src/index.js",
+  "types": "src/index.d.ts",
   "scripts": {
     "test": "jest"
   },
